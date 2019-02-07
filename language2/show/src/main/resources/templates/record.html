@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>录音测试</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="/static/js/recorder.js"></script>
+    <script src="/static/jquery/jquery-3.3.1.min.js"></script>
+
+</head>
+<body>
+<div class="container">
+
+    <form enctype="multipart/form-data" method="post" class="form-control" action="/upload">
+        <audio class="aaa" src="" >
+
+        </audio>
+        <a class="open btn btn-primary text-white">打开</a>
+        <a class="record btn btn-primary btn btn-primary btn btn-primary text-white">录制</a>
+        <a class="stop btn btn-primary btn btn-primary text-white">停止</a>
+        <a class="play btn btn-primary text-white">播放</a>
+
+
+        <div class="prompt text-dark mt-2">加载完毕</div>
+
+        <input id="recordInput" type="file" name="file">
+
+        <button class="btn btn-primary" type="submit">提交</button>
+    </form>
+
+</div>
+</body>
+
+<script type="text/javascript">
+    var rec=Recorder();
+    var ly;
+
+    $(".record").click(function() {
+        rec.open(function(){//打开麦克风授权获得相关资源
+            rec.start();//开始录音
+            $(".prompt").text("开始录音");
+        },function(msg){
+            // console.log("无法录音:"+msg);
+            alert(msg);
+        });
+    });
+
+
+    function blobToFile(theBlob, fileName){
+        //A Blob() is almost a File() - it's just missing the two properties below which we will add
+        theBlob.lastModifiedDate = new Date();
+        theBlob.name = fileName;
+        return theBlob;
+    };
+
+
+    $(".stop").click(function() {
+        rec.stop(function(blob){//`
+
+            $(".prompt").text("正在停止");
+            console.log(URL.createObjectURL(blob));
+
+            ly = blob;
+
+            rec.close();//释放录音资源
+
+            $(".prompt").text("录音保存成功");
+
+            var recInput = $("#recordInput")[0];
+
+            recInput.files = createFileList(new File([blob], "my-record.mp3", {type: "audio/mp3"}));
+
+
+            console.log(recInput.files);
+
+        },function(msg){
+            console.log("录音失败:"+msg);
+        });
+    });
+
+    function createFileList(a) {
+        a = [].slice.call(Array.isArray(a) ? a : arguments);
+        for (var c, b = c = a.length, d = !0; b-- && d;) d = a[b] instanceof File;
+        if (!d) throw new TypeError('expected argument to FileList is File or array of File objects');
+        for (b = (new ClipboardEvent('')).clipboardData || new DataTransfer; c--;) b.items.add(a[c]);
+        return b.files;
+    };
+
+
+    $(".open").click(function() {
+        rec = Recorder();
+        rec.open(function(){
+            $(".prompt").text("录音权限获取成功！");
+        },function(e){
+            $(".prompt").text("没有获取到录音权限！");
+        });
+    })
+
+    $(".play").click(function(){
+        var audio = $(".aaa")[0];
+        console.log(audio)
+        if(!(audio.ended || audio.paused)){
+            audio.pause();
+        };
+        audio.src=URL.createObjectURL(ly);
+        audio.play();
+    });
+</script>
+</html>
